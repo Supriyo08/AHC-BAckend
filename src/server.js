@@ -13,7 +13,7 @@ app.use(express.json()); // for parsing application/json
 app.use(express.urlencoded({ extended: true })); // optional for form-encoded support
 
 // === DATABASE CONNECTION ===
-mongoose.connect('mongodb://localhost:27017/resumeDB', {
+mongoose.connect('mongodb+srv://supriyo2026:40QOAFktKXHtoM64@cluster0.ag4efw4.mongodb.net/', {
   useNewUrlParser: true,
   useUnifiedTopology: true,
 })
