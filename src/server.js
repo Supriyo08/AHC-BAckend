@@ -6,7 +6,7 @@ const app = express();
 
 // === MIDDLEWARE ===
 app.use(cors({
-  origin: ['https://ah-cv2-0-fgi6.vercel.app', 'http://localhost:3000'], // replace with actual domains
+  origin: ['https://ah-cv2-0-fgi6.vercel.app','https://ahc-admin-three.vercel.app','http://localhost:5173', 'http://localhost:3000'], // replace with actual domains
   methods: ['GET', 'POST'],
 }));
 app.use(express.json()); // for parsing application/json
