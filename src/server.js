@@ -3,16 +3,39 @@ const mongoose = require('mongoose');
 const cors = require('cors');
 
 const app = express();
-app.use(cors());
-app.use(express.json());
 
-// MongoDB Connection
-mongoose.connect('mongodb+srv://supriyo2026:40QOAFktKXHtoM64@cluster0.ag4efw4.mongodb.net/', {
+// === MIDDLEWARE ===
+app.use(cors({
+  origin: ['https://ah-cv2-0-fgi6.vercel.app', 'http://localhost:3000'], // replace with actual domains
+  methods: ['GET', 'POST'],
+}));
+app.use(express.json()); // for parsing application/json
+app.use(express.urlencoded({ extended: true })); // optional for form-encoded support
+
+// === DATABASE CONNECTION ===
+mongoose.connect('mongodb://localhost:27017/resumeDB', {
   useNewUrlParser: true,
   useUnifiedTopology: true,
-});
+})
+.then(() => console.log('✅ Connected to MongoDB'))
+.catch((err) => console.error('❌ MongoDB connection error:', err));
 
-// ------------------ Contact Form Schema & API ------------------
+// === SCHEMAS & MODELS ===
+
+// Resume schema
+const resumeSchema = new mongoose.Schema({
+  name: String,
+  mobile: String,
+  email: String,
+  qualification: String,
+  profile: String,
+  designation: String,
+  resumeUrl: String, // optional: if using Cloudinary or file uploads
+}, { timestamps: true });
+
+const Resume = mongoose.model('Resume', resumeSchema);
+
+// Contact schema
 const contactSchema = new mongoose.Schema({
   name: String,
   mobile: String,
@@ -23,53 +46,47 @@ const contactSchema = new mongoose.Schema({
 
 const Contact = mongoose.model('Contact', contactSchema);
 
-// POST /api/contact - Save contact form submission
-app.post('/api/contact', async (req, res) => {
-  try {
-    const contact = new Contact(req.body);
-    const saved = await contact.save();
-    res.status(201).json(saved);
-  } catch (err) {
-    res.status(400).json({ error: err.message });
-  }
-});
+// === ROUTES ===
 
-// ------------------ Resume Schema & API ------------------
-const resumeSchema = new mongoose.Schema({
-  name: String,
-  mobile: String,
-  email: String,
-  qualification: String,
-  profile: String,
-  designation: String,
-  resumeUrl: String, // optional: to be used if integrating file uploads
-}, { timestamps: true });
-
-const Resume = mongoose.model('Resume', resumeSchema);
-
-// POST /api/resumes - Save resume data
+// Submit resume
 app.post('/api/resumes', async (req, res) => {
   try {
+    console.log('📥 Resume submission received:', req.body);
     const newResume = new Resume(req.body);
     const savedResume = await newResume.save();
-    res.status(201).json(savedResume);
+    res.status(201).json({ message: 'Resume submitted successfully', data: savedResume });
   } catch (err) {
+    console.error('❌ Error saving resume:', err);
     res.status(400).json({ error: err.message });
   }
 });
 
-// GET /api/resumes - Optional: List all resumes
-app.get('/api/resumes', async (req, res) => {
+// Submit contact message
+app.post('/api/contact', async (req, res) => {
   try {
-    const resumes = await Resume.find();
-    res.json(resumes);
+    console.log('📩 Contact form received:', req.body);
+    const contact = new Contact(req.body);
+    const savedContact = await contact.save();
+    res.status(201).json({ message: 'Message sent successfully', data: savedContact });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('❌ Error saving contact:', err);
+    res.status(400).json({ error: err.message });
   }
 });
 
-// ------------------ Start Server ------------------
-const PORT = 5000;
+// === OPTIONAL GET ROUTES ===
+app.get('/api/resumes', async (req, res) => {
+  const resumes = await Resume.find().sort({ createdAt: -1 });
+  res.json(resumes);
+});
+
+app.get('/api/contact', async (req, res) => {
+  const contacts = await Contact.find().sort({ createdAt: -1 });
+  res.json(contacts);
+});
+
+// === START SERVER ===
+const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
-  console.log(`✅ Server running on http://localhost:${PORT}`);
+  console.log(`🚀 Server running at http://localhost:${PORT}`);
 });
